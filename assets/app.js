@@ -6392,7 +6392,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function stabilizeDuplicate116(root=document){
     root.querySelectorAll?.('.rowActionBtn.duplicate,[data-duplicate-row]').forEach(btn=>{
       btn.classList.add('duplicate','iconBtn103','iconBtn109');
-      btn.textContent=copyStable116;
+      btn.replaceChildren();
       btn.title='Zeile duplizieren';
       btn.setAttribute('aria-label','Zeile duplizieren');
     });
@@ -6433,6 +6433,29 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(reload)controls.insertBefore(btn,reload);
     else controls.appendChild(btn);
   }
+  function refreshCurrentPreview116(btn){
+    const currentState=state;
+    const currentIndex=Number(window.regiePreviewIndex)||0;
+    const box=document.getElementById('regiePreviewList');
+    if(box)delete box.dataset.signature116;
+    if(typeof renderRegiePreviewList==='function')renderRegiePreviewList();
+    state=currentState;
+    window.regiePreviewIndex=currentIndex;
+    markAndScroll116(currentIndex,{smooth:false});
+    if(typeof updateRegiePreviewControls==='function')updateRegiePreviewControls();
+    if(btn){
+      btn.classList.add('justRefreshed116');
+      setTimeout(()=>btn.classList.remove('justRefreshed116'),450);
+    }
+  }
+  function stabilizeReload116(){
+    const btn=document.getElementById('regieReloadBtn');
+    if(!btn)return;
+    btn.classList.add('regieReloadStable116','iconBtn103');
+    btn.replaceChildren();
+    btn.title='Preview neu synchronisieren';
+    btn.setAttribute('aria-label','Preview neu synchronisieren');
+  }
   function showStartNoRender116(btn,e){
     e.preventDefault();
     e.stopPropagation();
@@ -6468,6 +6491,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     stabilizeDuplicate116(root);
     addRowPlayButtons116(root);
     addFullscreen116();
+    stabilizeReload116();
     const video=document.getElementById('regiePreviewVideo');
     if(video)video.preload='auto';
   }
@@ -6511,6 +6535,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
     const show=e.target.closest?.('[data-show-start]');
     if(show){showStartNoRender116(show,e);return;}
+    const reload=e.target.closest?.('#regieReloadBtn');
+    if(reload){
+      e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+      refreshCurrentPreview116(reload);
+      return;
+    }
   },true);
   document.addEventListener('fullscreenchange',()=>{
     document.body.classList.toggle('regieFullscreenActive116',!!document.fullscreenElement);

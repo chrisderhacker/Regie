@@ -1969,3 +1969,58 @@ tbody .col-screen .mediaTools{
     justify-self:center;
   }
 }
+
+/* ---- V117 stable preview toolbar and single duplicate icon ---- */
+@media screen{
+  .rowActionBtn.duplicate,
+  .rowActionBtn.duplicate.iconBtn103,
+  .rowActionBtn.duplicate.iconBtn108,
+  .rowActionBtn.duplicate.iconBtn109{
+    font-size:0!important;
+    line-height:1!important;
+  }
+  .rowActionBtn.duplicate > *{
+    display:none!important;
+  }
+  .rowActionBtn.duplicate::before{
+    content:"\29C9"!important;
+    font-size:14px!important;
+    line-height:1!important;
+    font-weight:800!important;
+  }
+  #regiePreviewControls.regiePreviewControls{
+    display:flex!important;
+    grid-template-columns:none!important;
+    align-items:center!important;
+    gap:6px!important;
+    flex-wrap:nowrap!important;
+    min-width:0!important;
+  }
+  #regiePreviewControls .regiePreviewControlBtn{
+    flex:0 0 32px!important;
+    width:32px!important;
+    min-width:32px!important;
+    height:30px!important;
+    padding:0!important;
+    display:grid!important;
+    place-items:center!important;
+  }
+  #regiePreviewControls #regiePlayPauseBtn{
+    flex:1 1 auto!important;
+    min-width:42px!important;
+    white-space:nowrap!important;
+  }
+  #regiePreviewControls #regieReloadBtn.regieReloadStable116{
+    font-size:0!important;
+  }
+  #regiePreviewControls #regieReloadBtn.regieReloadStable116::before{
+    content:"\21BB";
+    font-size:15px!important;
+    line-height:1!important;
+    font-weight:800!important;
+  }
+  #regiePreviewControls #regieReloadBtn.justRefreshed116{
+    background:rgba(201,255,25,.26)!important;
+    border-color:rgba(201,255,25,.72)!important;
+  }
+}

@@ -201,6 +201,14 @@ function loadLocal(){
       setServerStatus('FTP-Version: Standard-Projekt geladen aus '+DEFAULT_PROJECT_FILE);
     }catch(err){console.warn(err);setServerStatus('Standard-Projekt nicht geladen: '+err.message)}
   }
+  function hasRealProjectRows(){
+    return Array.isArray(state?.rows)&&state.rows.length>20&&document.querySelectorAll('#tbody tr').length>20;
+  }
+  function ensureDefaultProjectLoaded(){
+    if(new URLSearchParams(location.search).get('local')==='1')return;
+    if(hasRealProjectRows())return;
+    staticLoadDefaultProject(true).catch(err=>console.warn('Default-Watchdog konnte den Regieplan nicht laden',err));
+  }
   window.saveServerVersion=async function(){
     bumpVersion();syncVersionField();saveLocal(false);
     const blob=new Blob([JSON.stringify(exportableState(),null,2)],{type:'application/json'});
@@ -221,6 +229,8 @@ function loadLocal(){
   window.loadDefaultProjectFromServer=staticLoadDefaultProject;
   try{saveServerVersion=window.saveServerVersion;loadServerVersions=window.loadServerVersions;loadServerVersion=window.loadServerVersion;loadPlayerClips=window.loadPlayerClips;loadDefaultProjectFromServer=window.loadDefaultProjectFromServer;}catch(e){}
   setTimeout(()=>{try{loadServerVersions();loadDefaultProjectFromServer(true);loadPlayerClips();}catch(e){console.warn(e)}},0);
+  window.addEventListener('load',()=>setTimeout(ensureDefaultProjectLoaded,250));
+  setTimeout(ensureDefaultProjectLoaded,1200);
 })();
 `;
 
@@ -241,8 +251,8 @@ async function main() {
   const indexPath = path.join(out, 'index.html');
   let index = await fs.readFile(indexPath, 'utf8');
   index = index
-    .replace(/assets\/app\.css\?v=[^"']+/g, 'assets/app.css?v=ftp-static-20260706')
-    .replace(/assets\/app\.js\?v=[^"']+/g, 'assets/app.js?v=ftp-static-20260706');
+    .replace(/assets\/app\.css\?v=[^"']+/g, 'assets/app.css?v=ftp-static-20260706-v117')
+    .replace(/assets\/app\.js\?v=[^"']+/g, 'assets/app.js?v=ftp-static-20260706-v117');
   await fs.writeFile(indexPath, index, 'utf8');
 
   await fs.writeFile(path.join(out, 'UPLOAD-HINWEIS.txt'), [
