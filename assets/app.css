@@ -1884,3 +1884,88 @@ tbody .col-screen .mediaTools{
     overflow:hidden!important;
   }
 }
+
+/* ---- V116 preview control polish and stable row copy icon ---- */
+@media screen{
+  .rowActionBtn.duplicate,
+  .rowActionBtn.duplicate.iconBtn103,
+  .rowActionBtn.duplicate.iconBtn108,
+  .rowActionBtn.duplicate.iconBtn109{
+    position:relative!important;
+    font-size:0!important;
+    display:inline-grid!important;
+    place-items:center!important;
+  }
+  .rowActionBtn.duplicate > *{
+    display:none!important;
+  }
+  .rowActionBtn.duplicate::before{
+    content:'⧉';
+    font-size:14px!important;
+    line-height:1!important;
+    font-weight:900!important;
+    color:currentColor!important;
+  }
+  .handleCell{
+    padding-top:4px!important;
+    padding-bottom:4px!important;
+  }
+  .handleCell .grip{
+    width:28px!important;
+    height:24px!important;
+    font-size:15px!important;
+    margin:0 auto 4px!important;
+  }
+  .rowPlayBtn116{
+    width:28px;
+    height:24px;
+    border-radius:8px;
+    border:1px solid rgba(201,255,25,.38);
+    background:rgba(201,255,25,.10);
+    color:var(--lime);
+    display:grid;
+    place-items:center;
+    padding:0;
+    margin:0 auto;
+  }
+  .rowPlayBtn116 svg{
+    width:13px;
+    height:13px;
+    fill:currentColor;
+    pointer-events:none;
+  }
+  .rowPlayBtn116:hover{
+    background:var(--lime);
+    color:#071007;
+  }
+  .regiePreviewControlBtn svg{
+    width:15px!important;
+    height:15px!important;
+    fill:currentColor!important;
+    display:block!important;
+  }
+  .regieFullscreenActive116 .app{
+    filter:brightness(.72);
+  }
+  .regiePreviewPlayerWrap:fullscreen{
+    width:100vw;
+    height:100vh;
+    display:grid;
+    grid-template-rows:minmax(0,1fr) auto;
+    gap:10px;
+    padding:12px;
+    background:#000;
+  }
+  .regiePreviewPlayerWrap:fullscreen video{
+    width:100%!important;
+    height:100%!important;
+    max-height:none!important;
+    object-fit:contain;
+    border-radius:0!important;
+  }
+  .regiePreviewPlayerWrap:fullscreen .regiePreviewControls{
+    max-width:520px;
+    width:100%;
+    justify-self:center;
+  }
+}
