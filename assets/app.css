@@ -1644,3 +1644,113 @@ tbody .col-screen .mediaTools{
 @media screen and (max-width:1180px){
   .panelToggle113{display:none!important}
 }
+
+/* ---- V114 MacBook/Mobile work mode ---- */
+@media screen{
+  .mobileModeBtn114{
+    border-color:rgba(201,255,25,.42)!important;
+    color:var(--lime)!important;
+    font-weight:900!important;
+  }
+  body.mobileMode114 .mobileModeBtn114{
+    background:var(--lime)!important;
+    color:#071007!important;
+    border-color:var(--lime)!important;
+  }
+  body.mobileMode114{
+    overflow:hidden!important;
+  }
+  body.mobileMode114 .app{
+    --left-panel:0px!important;
+    --right-panel:0px!important;
+    gap:4px!important;
+    padding:4px!important;
+    grid-template-columns:0 minmax(0,1fr) 0!important;
+  }
+  body.mobileMode114 .side,
+  body.mobileMode114 .right{
+    opacity:0!important;
+    pointer-events:none!important;
+    border-width:0!important;
+    overflow:hidden!important;
+  }
+  body.mobileMode114 .panelToggle113{
+    display:none!important;
+  }
+  body.mobileMode114 .top{
+    height:auto!important;
+    min-height:42px!important;
+    padding:6px 8px!important;
+    gap:8px!important;
+  }
+  body.mobileMode114 .title h1{
+    font-size:15px!important;
+    line-height:1.1!important;
+  }
+  body.mobileMode114 .title p{
+    display:none!important;
+  }
+  body.mobileMode114 .topActions,
+  body.mobileMode114 .toolbarLeft,
+  body.mobileMode114 .toolbarRight{
+    gap:5px!important;
+    flex-wrap:nowrap!important;
+  }
+  body.mobileMode114 .btn,
+  body.mobileMode114 .chipBtn{
+    min-height:28px!important;
+    padding:5px 8px!important;
+    font-size:10px!important;
+  }
+  body.mobileMode114 .toolbar{
+    height:auto!important;
+    min-height:38px!important;
+    padding:5px 8px!important;
+    gap:6px!important;
+  }
+  body.mobileMode114 .search{
+    width:160px!important;
+    padding:6px 10px!important;
+  }
+  body.mobileMode114 .zoom{
+    padding:2px!important;
+    gap:3px!important;
+  }
+  body.mobileMode114 .zoom button{
+    width:25px!important;
+    height:23px!important;
+  }
+  body.mobileMode114 .zoom span{
+    min-width:36px!important;
+    font-size:10px!important;
+  }
+  body.mobileMode114 .tableWrap{
+    scrollbar-width:thin!important;
+  }
+  body.mobileMode114 table{
+    font-size:calc(11px * var(--zoom))!important;
+  }
+  body.mobileMode114 thead th{
+    height:calc(38px * var(--zoom))!important;
+    padding:4px!important;
+    font-size:8px!important;
+  }
+  body.mobileMode114 .colBox{
+    min-height:calc(26px * var(--zoom))!important;
+    padding:0 8px!important;
+  }
+  body.mobileMode114 td{
+    padding:4px 5px!important;
+  }
+  body.mobileMode114 .cellText,
+  body.mobileMode114 .mediaDrop,
+  body.mobileMode114 .peopleCell{
+    height:calc(34px * var(--zoom))!important;
+    max-height:calc(34px * var(--zoom))!important;
+  }
+  body.mobileMode114 .mediaThumb{
+    width:48px!important;
+    height:27px!important;
+    flex-basis:48px!important;
+  }
+}

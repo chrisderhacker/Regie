@@ -6016,3 +6016,159 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   };
   try{toggleRegiePreview=window.toggleRegiePreview;}catch(e){}
 })();
+
+/* ---- script block 51: V114 MacBook/Mobile mode and fast normal row insert ---- */
+(function(){
+  function initMobileMode114(){
+    const actions=document.querySelector('.topActions');
+    if(!actions||document.getElementById('mobileModeBtn114'))return;
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.id='mobileModeBtn114';
+    btn.className='btn mobileModeBtn114';
+    btn.textContent='MOBILE';
+    btn.title='MacBook/Mobile-Modus: Seiten ausblenden und Tabelle kompakter anzeigen';
+    btn.addEventListener('click',()=>{
+      document.body.classList.toggle('mobileMode114');
+      const active=document.body.classList.contains('mobileMode114');
+      btn.classList.toggle('active',active);
+      try{localStorage.setItem('regie_mobileMode114',active?'1':'0');}catch(e){}
+      if(active){
+        document.body.classList.add('leftCollapsed','rightCollapsed');
+      }
+      setTimeout(()=>{try{if(typeof fitToScreen==='function')fitToScreen();}catch(e){}},80);
+    });
+    actions.prepend(btn);
+    try{
+      if(localStorage.getItem('regie_mobileMode114')==='1'){
+        document.body.classList.add('mobileMode114','leftCollapsed','rightCollapsed');
+        btn.classList.add('active');
+      }
+    }catch(e){}
+  }
+
+  function activeCueNumber114(rowId){
+    let cue=0;
+    for(const r of state.rows||[]){
+      if(!r.isBlock)cue++;
+      if(r.id===rowId)return r.isBlock?'':cue;
+    }
+    return '';
+  }
+  function refreshCueCells114(){
+    let cue=0;
+    document.querySelectorAll('#tbody tr').forEach(tr=>{
+      const row=state.rows.find(r=>r.id===tr.dataset.id);
+      if(!row||row.isBlock)return;
+      cue++;
+      const cellEl=tr.querySelector('.cueCell');
+      if(cellEl)cellEl.textContent=cue;
+    });
+  }
+  function rowHtml114(r){
+    const c=cols();
+    const p=preset(r.preset),ct=colorsFor(p);
+    const tr=document.createElement('tr');
+    tr.dataset.id=r.id;
+    tr.style.setProperty('--row-bg',ct.bg);
+    tr.style.setProperty('--row-text',ct.tx);
+    tr.style.cssText+=rowStyle(r);
+    tr.classList.add('activeRow');
+    if(r.muted)tr.classList.add('rowMuted');
+    if(r.isBlock){
+      tr.classList.add('blockSeparator');
+      tr.innerHTML=`<td colspan="${c.length}"><div class="blockBar"><span class="grip" draggable="true" title="Trenner ziehen">..</span><div class="colorPill" data-color="${r.id}">${esc(preset(r.preset).name)}</div><input class="blockInput" data-field="what" value="${esc(r.what||'Abschnitt')}" placeholder="Abschnitt / Blocktitel"><span class="rowResize" data-resize-row="${r.id}" title="Zeilenhoehe ziehen"></span></div></td>${rowActions(r)}`;
+    }else{
+      tr.innerHTML=c.map(col=>cell(col,r,activeCueNumber114(r.id),ct)).join('')+rowActions(r);
+    }
+    return tr;
+  }
+  function bindFastRow114(tr){
+    if(!tr)return;
+    const activate=()=>{state.activeRowId=tr.dataset.id;document.querySelectorAll('#tbody tr').forEach(x=>x.classList.remove('activeRow'));tr.classList.add('activeRow');saveLocal(false);};
+    tr.addEventListener('mousedown',activate);
+    tr.addEventListener('focusin',activate);
+    tr.querySelectorAll('[data-field]').forEach(el=>{
+      const commit=()=>{
+        const r=rowFrom(el),f=el.dataset.field;
+        if(!r)return;
+        if(f==='start'){r.start=norm(el.value);recalc(state.rows.indexOf(r),false);syncTimeCells();}
+        else if(f==='duration'){r.duration=norm(el.value);recalc(state.rows.indexOf(r),false);syncTimeCells();}
+        else{r[f]=el.value;saveLocal(false);}
+      };
+      el.addEventListener('blur',commit);
+      el.addEventListener('change',commit);
+      el.addEventListener('keydown',e=>{if(e.key==='Enter'&&el.tagName==='INPUT'){e.preventDefault();el.blur();}});
+      if(el.classList.contains('duration')||el.dataset.field==='start'){
+        el.addEventListener('input',()=>{
+          const r=rowFrom(el);if(!r)return;
+          if(el.dataset.field==='start')r.start=el.value;else r.duration=el.value;
+          recalc(state.rows.indexOf(r),false);syncTimeCells();
+        });
+      }
+    });
+    tr.querySelectorAll('[data-color]').forEach(el=>el.addEventListener('click',e=>openColorMenu(e.currentTarget.dataset.color,e.currentTarget)));
+    tr.querySelectorAll('[data-show-start]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();state.showStartRowId=b.dataset.showStart;state.activeRowId=state.showStartRowId;render();}));
+    tr.querySelectorAll('[data-pick-media]').forEach(b=>b.addEventListener('click',e=>{
+      e.stopPropagation();
+      const inp=Array.from(document.querySelectorAll('[data-media-file]')).find(x=>x.dataset.mediaFile===b.dataset.pickMedia);
+      if(inp)inp.click();
+    }));
+    tr.querySelectorAll('[data-media-file]').forEach(inp=>inp.addEventListener('change',async()=>{
+      const file=inp.files&&inp.files[0];if(!file)return;
+      const [rid,sid]=inp.dataset.mediaFile.split('|');
+      const r=state.rows.find(x=>x.id===rid);if(!r)return;
+      const kind=fileKindFromName(file);
+      if(sid==='sound'){
+        if(!kind.type.startsWith('audio/')){alert('In Audio / Ton bitte MP3, WAV oder eine Audiodatei verwenden.');inp.value='';return;}
+        const mediaObj=await readMedia(file);r.soundMedia=mediaObj;r.sound=(r.sound||mediaObj.name).trim()||mediaObj.name;autoExpandMediaColumn('sound',mediaObj,r.id);inp.value='';render();return;
+      }
+      if(kind.type.startsWith('audio/')){alert('Audio bitte in die Spalte Audio / Ton legen, nicht in LED / Screen.');inp.value='';return;}
+      if(!r.screens)r.screens={};if(!r.screens[sid])r.screens[sid]={text:'',media:null};
+      const mediaObj=await readMedia(file);r.screens[sid].media=mediaObj;r.screens[sid].text=(r.screens[sid].text||mediaObj.name).trim()||mediaObj.name;autoExpandMediaColumn('screen:'+sid,mediaObj,r.id);inp.value='';render();
+    }));
+    tr.querySelectorAll('[data-delete-row]').forEach(b=>b.addEventListener('click',e=>{
+      e.stopPropagation();
+      const id=b.dataset.deleteRow;
+      const r=state.rows.find(x=>x.id===id);if(!r)return;
+      if(!confirm((r.isBlock?'Trenner':'Zeile')+' wirklich loeschen?'))return;
+      state.rows=state.rows.filter(x=>x.id!==id);
+      tr.remove();
+      recalc(0,false);syncTimeCells();refreshCueCells114();saveLocal(false);
+      if(typeof renderRegiePreviewList==='function')renderRegiePreviewList();
+    }));
+  }
+  function addRowFast114(block=false){
+    if(block||String(document.getElementById('search')?.value||'').trim()){
+      return window.__oldAddRow114?window.__oldAddRow114(block):undefined;
+    }
+    const tbody=document.getElementById('tbody');
+    if(!tbody||typeof cell!=='function'||typeof rowActions!=='function')return window.__oldAddRow114?window.__oldAddRow114(block):undefined;
+    const insertAt=currentInsertIndex();
+    const prev=[...state.rows.slice(0,insertAt)].reverse().find(r=>!r.isBlock);
+    const start=prev?prev.end:'09:00:00';
+    const r={id:uid(),isBlock:false,preset:'neutral',start,duration:'00:05:00',end:'',what:'Neue Regiezeile',people:[],detail:'',light:'',sound:'',camera:'',screens:{}};
+    state.screens.forEach(s=>r.screens[s.id]={text:'',media:null});
+    state.cols.forEach(c=>{if(c.id.startsWith('col_')||(!baseCols.find(b=>b.id===c.id)))r[c.id]='';});
+    state.rows.splice(insertAt,0,r);
+    state.activeRowId=r.id;
+    recalc(insertAt,false);
+    document.querySelectorAll('#tbody tr').forEach(x=>x.classList.remove('activeRow'));
+    const tr=rowHtml114(r);
+    const before=tbody.children[insertAt]||null;
+    tbody.insertBefore(tr,before);
+    bindFastRow114(tr);
+    syncTimeCells();
+    refreshCueCells114();
+    saveLocal(false);
+    if(typeof renderSide==='function')setTimeout(()=>{try{renderSide();}catch(e){}},0);
+    if(typeof renderRegiePreviewList==='function')setTimeout(()=>{try{renderRegiePreviewList();}catch(e){}},0);
+    setTimeout(()=>tr.scrollIntoView({block:'center',inline:'nearest'}),0);
+    return r;
+  }
+  if(!window.__oldAddRow114)window.__oldAddRow114=window.addRow||addRow;
+  window.addRow=addRowFast114;
+  try{addRow=window.addRow;}catch(e){}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initMobileMode114,{once:true});
+  else setTimeout(initMobileMode114,0);
+})();
