@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Regieplan Web-App</title>
+<link rel="stylesheet" href="assets/app.css?v=20260702-v111">
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="sideBlock">
+      <label class="logoFrame" id="logoFrame"><input id="logoInput" type="file" accept="image/*"><span class="hint">16:9 Event-Logo<br>Klick oder Bild ablegen<br><small>Doppelklick ersetzt · Bild ziehen verschiebt</small></span></label>
+      <div class="logoTools"><button class="chipBtn" id="logoFit">Fit</button><button class="chipBtn" id="logoFill">Fill</button><button class="chipBtn" id="logoClear">Löschen</button></div>
+    </div>
+    <div class="sideBlock">
+      <label class="label">Projekt</label><input class="input" id="projectName">
+      <div style="height:10px"></div><label class="label">Stand / Version</label><input class="input" id="projectVersion">
+      <div class="stat" id="statBox"></div>
+    </div>
+    <div class="copyright">© derhacker.com</div>
+  </aside>
+  <main class="main">
+    <div class="top">
+      <div class="title"><h1 id="headline">Regieplan</h1><p>Drag nur links am Griff · Texteingabe ohne Verschieben · Zeiten automatisch</p></div>
+      <div class="topActions"><button class="btn" id="themeBtn">Light Mode</button><button class="btn" id="localSaveBtn">Lokal speichern</button><button class="btn" id="importBtn">Import</button><button class="btn" id="exportBtn">Export</button><button class="btn" onclick="window.print()">Drucken/PDF</button><input id="jsonFile" type="file" accept="application/json" hidden></div>
+    </div>
+    <div class="toolbar">
+      <div class="toolbarLeft"><button class="btn primary" data-action="add-row">+ Zeile</button><button class="btn" data-action="add-block">+ Trenner</button><button class="btn" data-action="recalc" title="Rechnet Start/Ende neu: erste Regiezeile behält ihre Startzeit, alle folgenden Zeilen laufen automatisch weiter. Trenner zählen nicht als Zeit.">Zeiten neu rechnen</button></div>
+      <div class="toolbarRight"><input class="search" id="search" placeholder="Suchen im Plan"><div class="zoom"><button id="zoomOut">-</button><button id="zoomFit" title="Fit to screen">Fit</button><span id="zoomLabel">100%</span><button id="zoomIn">+</button></div></div>
+    </div>
+    <div class="tableWrap" id="tableWrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+  </main>
+  <aside class="right">
+    <div class="tabs"><button class="active" data-tab="add">Add</button><button data-tab="server">Server</button><button data-tab="people">Menschen</button><button data-tab="screens">Screens</button><button data-tab="columns">Spalten</button><button data-tab="colors">Farben</button></div>
+    <section class="section active" id="sec-add">
+      <div class="panel"><h2>Hinzufügen</h2><div class="grid"><button class="btn primary" data-action="add-row">+ Regiezeile</button><button class="btn" data-action="add-block">+ farbiger Trenner</button><button class="btn" data-jump="screens">+ Screen-Spalte</button><button class="btn" data-jump="people">+ Mensch</button><button class="btn" data-jump="columns">+ freie Spalte</button></div></div>
+      <div class="panel"><h2>Regie-Video-Preview</h2><div class="regiePreview"><video id="regiePreviewVideo" controls playsinline preload="metadata"></video><div class="regiePreviewNow" id="regiePreviewNow">Noch kein Video ausgewaehlt.</div><div class="regiePreviewList" id="regiePreviewList"></div></div></div>
+    </section>
+    <section class="section" id="sec-server">
+      <div class="panel"><h2>Server-Versionen</h2><div class="grid"><button class="btn primary" id="serverSaveBtnSide">Aktuelle Version speichern</button><button class="btn" id="serverRefreshBtn">Versionen neu laden</button></div><div class="serverStatus" id="serverStatus">Server wird geprueft...</div></div>
+      <div class="panel"><h2>Gespeicherte Versionen</h2><div class="versionList" id="versionList"><div class="help">Noch keine Server-Versionen geladen.</div></div></div>
+      <div class="panel"><h2>Player-Videos</h2><div class="grid"><button class="btn" id="playerRefreshBtn">Player-Videos laden</button></div><div class="serverStatus" id="playerStatus">Playlist wird geprueft...</div><div class="clipList" id="playerClipList"><div class="help">Noch keine Player-Videos geladen.</div></div></div>
+    </section>
+    <section class="section" id="sec-people">
+      <div class="panel"><h2>Mensch hinzufügen</h2><div class="grid"><input class="input" id="personName" placeholder="Name"><input class="input" id="personRole" placeholder="Rolle / Funktion"><label class="fileLabel">Bild wählen<input id="personImage" type="file" accept="image/*"></label><button class="btn primary" id="savePerson">Mensch speichern</button></div></div>
+      <div class="panel"><h2>Menschenpool</h2><div class="list" id="peopleList"></div></div>
+    </section>
+    <section class="section" id="sec-screens">
+      <div class="panel"><h2>Screen-Spalte hinzufügen</h2><div class="grid two"><input class="input" id="screenName" placeholder="LED Main"><input class="input" id="screenRes" placeholder="1920x1080"></div><div style="height:8px"></div><button class="btn primary" id="saveScreen">Screen speichern</button></div>
+      <div class="panel"><h2>Screens</h2><div class="list" id="screenList"></div></div>
+    </section>
+    <section class="section" id="sec-columns">
+      <div class="panel"><h2>Freie Spalte hinzufügen</h2><div class="grid"><input class="input" id="columnName" placeholder="z.B. Prompt, Kamera, Requisite"><button class="btn primary" id="saveColumn">Spalte speichern</button></div><div class="noteSmall">Oder Vorlage wählen:</div><div class="templateButtons" id="columnTemplates"></div></div>
+      <div class="panel"><h2>Spalten anzeigen</h2><div id="columnList"></div></div>
+    </section>
+    <section class="section" id="sec-colors">
+      <div class="panel">
+        <h2>Farben</h2>
+        <p class="colorApplyHint">Preset auswählen, dann eine Farbkachel anklicken. Dark und Print/Light werden gemeinsam gesetzt. Eigene Presets unten kurz hinzufügen.</p>
+        <div class="colorQuick" id="colorQuick"></div>
+        <div class="grid two">
+          <input class="input" id="presetName" placeholder="Neues Preset, z. B. Sponsor">
+          <button class="btn primary" id="savePreset">+ Preset</button>
+        </div>
+        <input id="presetDark" type="color" value="#273f12" hidden><input id="presetLight" type="color" value="#e5f6ce" hidden>
+      </div>
+      <div class="panel"><h2>Presets</h2><div class="presetListCompact" id="presetList"></div></div>
+    </section>
+  </aside>
+</div>
+<div class="colorMenu" id="colorMenu"></div>
+<div class="mediaModal" id="mediaModal"><div class="mediaModalCard"><button class="mediaModalClose" id="mediaModalClose" type="button">X</button><div class="mediaModalTitle" id="mediaModalTitle"></div><div class="mediaModalBody" id="mediaModalBody"></div></div></div>
+<script src="assets/app.js?v=20260702-v111"></script>
+</body>
+</html>
