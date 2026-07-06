@@ -1754,3 +1754,133 @@ tbody .col-screen .mediaTools{
     flex-basis:48px!important;
   }
 }
+
+/* ---- V115 MacBook mode polish, search clear, stable icons/columns ---- */
+@media screen{
+  .searchWrap115{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    min-width:0;
+  }
+  .searchWrap115 .search{
+    padding-right:34px!important;
+  }
+  .searchClear115{
+    position:absolute;
+    right:7px;
+    width:22px;
+    height:22px;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:999px;
+    background:rgba(255,255,255,.065);
+    color:rgba(242,246,239,.74);
+    display:none;
+    place-items:center;
+    padding:0;
+    font-size:0;
+  }
+  .searchClear115 svg{
+    width:13px;
+    height:13px;
+    fill:currentColor;
+  }
+  .searchWrap115.hasText .searchClear115{display:grid}
+  .searchClear115:hover{
+    color:#fff;
+    border-color:rgba(201,255,25,.58);
+    background:rgba(201,255,25,.12);
+  }
+  thead .colBox,
+  #tbody .colorPill,
+  #tbody .cueCell,
+  #tbody .cellInput,
+  #tbody .showStartBtn,
+  #tbody tr.blockSeparator .blockInput{
+    font-size:calc(13px * var(--zoom))!important;
+    font-weight:900!important;
+  }
+  #tbody .cellInput{
+    line-height:1.15!important;
+  }
+  .rowActionBtn.duplicate,
+  .rowActionBtn.duplicate.iconBtn103,
+  .rowActionBtn.duplicate.iconBtn109{
+    font-size:0!important;
+    width:24px!important;
+    min-width:24px!important;
+    height:24px!important;
+  }
+  .rowActionBtn.duplicate svg{
+    width:15px!important;
+    height:15px!important;
+    display:block!important;
+    fill:currentColor!important;
+  }
+
+  body.mobileMode114 .app{
+    --left-panel:150px!important;
+    --right-panel:260px!important;
+    grid-template-columns:var(--left-panel) minmax(0,1fr) var(--right-panel)!important;
+    gap:5px!important;
+    padding:4px!important;
+  }
+  body.mobileMode114 .side,
+  body.mobileMode114 .right{
+    opacity:1!important;
+    pointer-events:auto!important;
+    border-width:1px!important;
+    overflow:hidden!important;
+  }
+  body.mobileMode114.leftCollapsed .app{--left-panel:150px!important}
+  body.mobileMode114.rightCollapsed .app{--right-panel:260px!important}
+  body.mobileMode114.leftCollapsed .side,
+  body.mobileMode114.rightCollapsed .right{
+    opacity:1!important;
+    pointer-events:auto!important;
+    border-width:1px!important;
+  }
+  body.mobileMode114 .panelToggle113{
+    display:grid!important;
+  }
+  body.mobileMode114 .sideBlock{padding:8px!important}
+  body.mobileMode114 .logoTools{gap:4px!important}
+  body.mobileMode114 .tabs{padding:6px!important;gap:5px!important}
+  body.mobileMode114 .tabs button{padding:7px 5px!important;font-size:10px!important}
+  body.mobileMode114 .section{padding:7px!important}
+  body.mobileMode114 .panel{padding:8px!important;margin-bottom:7px!important;border-radius:12px!important}
+  body.mobileMode114 .panel h2{font-size:11px!important;margin-bottom:7px!important}
+  body.mobileMode114 .regiePreview video{max-height:150px!important}
+  body.mobileMode114 .regiePreviewList{max-height:34dvh!important}
+  body.mobileMode114 .topActions,
+  body.mobileMode114 .toolbarLeft,
+  body.mobileMode114 .toolbarRight{
+    overflow-x:auto!important;
+    scrollbar-width:thin!important;
+  }
+}
+
+@media screen and (max-width:1180px){
+  body.mobileMode114{
+    overflow:hidden!important;
+  }
+  body.mobileMode114 .app{
+    height:100dvh!important;
+    min-height:0!important;
+    grid-template-columns:130px minmax(0,1fr) 230px!important;
+    grid-template-rows:1fr!important;
+  }
+  body.mobileMode114 .side,
+  body.mobileMode114 .main,
+  body.mobileMode114 .right{
+    border-radius:12px!important;
+    min-height:0!important;
+  }
+  body.mobileMode114 .side{
+    display:flex!important;
+  }
+  body.mobileMode114 .right{
+    max-height:none!important;
+    overflow:hidden!important;
+  }
+}

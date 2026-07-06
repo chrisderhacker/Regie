@@ -6172,3 +6172,164 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initMobileMode114,{once:true});
   else setTimeout(initMobileMode114,0);
 })();
+
+/* ---- script block 52: V115 search clear, soft columns, MacBook mode fix ---- */
+(function(){
+  const copyIcon115='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7V3h14v14h-4v4H3V7h4Zm2 0h8v8h2V5H9v2Zm6 2H5v10h10V9Z"/></svg>';
+  function hiddenCols115(){
+    state.hiddenCols=Array.isArray(state.hiddenCols)?state.hiddenCols:[];
+    return state.hiddenCols;
+  }
+  function migrateColumnVisibility115(){
+    const hidden=hiddenCols115();
+    (state.cols||[]).forEach(c=>{
+      if(c&&c.show===false&&!hidden.includes(c.id))hidden.push(c.id);
+      if(c)c.show=true;
+    });
+  }
+  function allCurrentColIds115(){
+    try{return cols().map(c=>c.id);}catch(e){return [];}
+  }
+  function setColumnDomVisible115(id,visible){
+    const ids=allCurrentColIds115();
+    const idx=ids.indexOf(id);
+    if(idx<0)return false;
+    const nth=idx+1;
+    document.querySelectorAll(`#thead th:nth-child(${nth}), #tbody tr:not(.blockSeparator) td:nth-child(${nth})`).forEach(el=>{
+      el.style.display=visible?'':'none';
+    });
+    document.querySelectorAll('#tbody tr.blockSeparator td:first-child').forEach(td=>{
+      td.colSpan=ids.filter(colId=>!hiddenCols115().includes(colId)).length||1;
+    });
+    return true;
+  }
+  function applyColumnVisibility115(){
+    migrateColumnVisibility115();
+    const hidden=new Set(hiddenCols115());
+    allCurrentColIds115().forEach(id=>setColumnDomVisible115(id,!hidden.has(id)));
+    document.querySelectorAll('[data-toggle-col]').forEach(input=>{
+      input.checked=!hidden.has(input.dataset.toggleCol);
+    });
+  }
+  function syncColumnToggles115(){
+    const hidden=new Set(hiddenCols115());
+    document.querySelectorAll('[data-toggle-col]').forEach(input=>{
+      input.checked=!hidden.has(input.dataset.toggleCol);
+      input.closest('.colToggle')?.classList.toggle('isHiddenColumn115',hidden.has(input.dataset.toggleCol));
+    });
+  }
+  document.addEventListener('change',e=>{
+    const input=e.target.closest?.('[data-toggle-col]');
+    if(!input)return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    migrateColumnVisibility115();
+    const id=input.dataset.toggleCol;
+    const hidden=hiddenCols115();
+    const pos=hidden.indexOf(id);
+    if(input.checked&&pos>=0)hidden.splice(pos,1);
+    if(!input.checked&&pos<0)hidden.push(id);
+    const col=state.cols.find(c=>c.id===id);
+    if(col)col.show=true;
+    const applied=setColumnDomVisible115(id,input.checked);
+    syncColumnToggles115();
+    saveLocal(false);
+    if(!applied&&typeof renderTable==='function')setTimeout(()=>{renderTable();applyColumnVisibility115();},0);
+  },true);
+
+  function installSearchClear115(){
+    const search=document.getElementById('search');
+    if(!search||search.closest('.searchWrap115'))return;
+    const wrap=document.createElement('span');
+    wrap.className='searchWrap115';
+    search.parentNode.insertBefore(wrap,search);
+    wrap.appendChild(search);
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='searchClear115';
+    btn.title='Suche loeschen';
+    btn.setAttribute('aria-label','Suche loeschen');
+    btn.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 10.6 4.95-4.95 1.4 1.4L13.4 12l4.95 4.95-1.4 1.4L12 13.4l-4.95 4.95-1.4-1.4L10.6 12 5.65 7.05l1.4-1.4L12 10.6Z"/></svg>';
+    wrap.appendChild(btn);
+    const sync=()=>wrap.classList.toggle('hasText',!!search.value);
+    search.addEventListener('input',sync);
+    btn.addEventListener('click',()=>{
+      if(!search.value)return;
+      search.value='';
+      sync();
+      search.focus();
+      if(typeof renderTable==='function')renderTable();
+      applyColumnVisibility115();
+    });
+    sync();
+  }
+  function stabilizeDuplicateIcons115(root=document){
+    root.querySelectorAll?.('.rowActionBtn.duplicate,[data-duplicate-row]').forEach(btn=>{
+      if(btn.innerHTML!==copyIcon115)btn.innerHTML=copyIcon115;
+      btn.classList.add('iconBtn103','iconBtn109');
+      btn.style.fontSize='0';
+      btn.title='Zeile duplizieren';
+      btn.setAttribute('aria-label','Zeile duplizieren');
+    });
+  }
+  function replaceMobileButton115(){
+    const old=document.getElementById('mobileModeBtn114');
+    const actions=document.querySelector('.topActions');
+    if(!old||!actions||old.dataset.v115==='1')return;
+    const btn=old.cloneNode(true);
+    btn.dataset.v115='1';
+    btn.className='btn mobileModeBtn114';
+    btn.textContent='MOBILE';
+    btn.title='MacBook-Modus: kompakter, Inspektoren bleiben sichtbar';
+    old.replaceWith(btn);
+    const sync=()=>{
+      const active=document.body.classList.contains('mobileMode114');
+      btn.classList.toggle('active',active);
+      if(active)document.body.classList.remove('leftCollapsed','rightCollapsed');
+    };
+    btn.addEventListener('click',()=>{
+      document.body.classList.toggle('mobileMode114');
+      const active=document.body.classList.contains('mobileMode114');
+      if(active)document.body.classList.remove('leftCollapsed','rightCollapsed');
+      try{localStorage.setItem('regie_mobileMode114',active?'1':'0');}catch(e){}
+      sync();
+      setTimeout(()=>{try{if(typeof fitToScreen==='function')fitToScreen();}catch(e){}},80);
+    });
+    try{
+      if(localStorage.getItem('regie_mobileMode114')==='1'){
+        document.body.classList.add('mobileMode114');
+        document.body.classList.remove('leftCollapsed','rightCollapsed');
+      }
+    }catch(e){}
+    sync();
+  }
+  const oldRenderTable115=window.renderTable||renderTable;
+  window.renderTable=function(){
+    migrateColumnVisibility115();
+    const out=oldRenderTable115.apply(this,arguments);
+    setTimeout(()=>{applyColumnVisibility115();stabilizeDuplicateIcons115(document);},0);
+    return out;
+  };
+  try{renderTable=window.renderTable;}catch(e){}
+
+  const oldRenderSide115=window.renderSide||renderSide;
+  window.renderSide=function(){
+    migrateColumnVisibility115();
+    const out=oldRenderSide115.apply(this,arguments);
+    syncColumnToggles115();
+    return out;
+  };
+  try{renderSide=window.renderSide;}catch(e){}
+
+  function init115(){
+    migrateColumnVisibility115();
+    installSearchClear115();
+    replaceMobileButton115();
+    applyColumnVisibility115();
+    stabilizeDuplicateIcons115(document);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(init115,0),{once:true});
+  else setTimeout(init115,0);
+  setTimeout(init115,300);
+})();
