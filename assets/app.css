@@ -2023,4 +2023,12 @@ tbody .col-screen .mediaTools{
     background:rgba(201,255,25,.26)!important;
     border-color:rgba(201,255,25,.72)!important;
   }
+  #regiePreviewControls #regieExportPlayerJsonBtn120{
+    flex:0 0 48px!important;
+    width:48px!important;
+    min-width:48px!important;
+    font-size:11px!important;
+    font-weight:900!important;
+    letter-spacing:.02em!important;
+  }
 }

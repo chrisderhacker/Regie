@@ -251,8 +251,8 @@ async function main() {
   const indexPath = path.join(out, 'index.html');
   let index = await fs.readFile(indexPath, 'utf8');
   index = index
-    .replace(/assets\/app\.css\?v=[^"']+/g, 'assets/app.css?v=ftp-static-20260706-v119')
-    .replace(/assets\/app\.js\?v=[^"']+/g, 'assets/app.js?v=ftp-static-20260706-v119');
+    .replace(/assets\/app\.css\?v=[^"']+/g, 'assets/app.css?v=ftp-static-20260706-v121')
+    .replace(/assets\/app\.js\?v=[^"']+/g, 'assets/app.js?v=ftp-static-20260706-v121');
   await fs.writeFile(indexPath, index, 'utf8');
 
   await fs.writeFile(path.join(out, 'UPLOAD-HINWEIS.txt'), [

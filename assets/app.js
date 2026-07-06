@@ -861,6 +861,162 @@ $('#regiePreviewVideo')?.addEventListener('pause',()=>renderRegiePreviewList());
   };
 })();
 
+/* ---- script block 56: V120 export regie preview as diecrew player JSON ---- */
+(function(){
+  const PLAYER_EXPORT_ROOT120='https://usa.derhacker.com/CONTENT/';
+  function cleanFile120(value){
+    return String(value||'')
+      .split('?')[0]
+      .split('#')[0]
+      .replace(/\\/g,'/')
+      .split('/')
+      .filter(Boolean)
+      .pop()||'media';
+  }
+  function relPath120(item){
+    const m=item?.media||item||{};
+    const candidates=[m.relativePath,m.path,item.relativePath,item.url,m.remoteUrl,m.url,item.remoteUrl].filter(Boolean).map(v=>String(v).replace(/\\/g,'/'));
+    for(let value of candidates){
+      value=value.trim();
+      if(!value)continue;
+      value=value.split('?')[0].split('#')[0];
+      const content=value.match(/(?:^|\/)CONTENT\/(.+)$/i);
+      if(content)return content[1].replace(/^\/+/,'');
+      if(/^https?:\/\//i.test(value)){
+        try{
+          const u=new URL(value);
+          const p=decodeURIComponent(u.pathname||'').replace(/^\/+/,'');
+          const c=p.match(/(?:^|\/)CONTENT\/(.+)$/i);
+          if(c)return c[1].replace(/^\/+/,'');
+        }catch(e){}
+        continue;
+      }
+      return value.replace(/^CONTENT\//i,'').replace(/^\/+/,'');
+    }
+    return cleanFile120(m.name||item?.name||'media');
+  }
+  function mime120(item){
+    const m=item?.media||item||{};
+    const direct=String(item?.type||item?.mime||m.type||m.mime||'').toLowerCase();
+    if(direct)return direct;
+    const name=cleanFile120(item?.name||m.name||m.url||m.remoteUrl);
+    const ext=(name.match(/\.([a-z0-9]+)$/i)?.[1]||'').toLowerCase();
+    if(ext==='mp3')return 'audio/mpeg';
+    if(ext==='wav'||ext==='wave')return 'audio/wav';
+    if(['m4a','aac','ogg','flac'].includes(ext))return 'audio/'+ext;
+    if(ext==='webm')return 'video/webm';
+    if(ext==='mov')return 'video/quicktime';
+    return 'video/mp4';
+  }
+  function isAudio120(item){
+    const type=mime120(item);
+    return item?.kind==='audio'||type.startsWith('audio/');
+  }
+  function itemUrl120(relativePath,item){
+    const m=item?.media||item||{};
+    const existing=item?.url||m.remoteUrl||m.url||'';
+    if(/^https?:\/\//i.test(existing))return existing;
+    try{return new URL(String(relativePath||'').replace(/^\/+/,''),PLAYER_EXPORT_ROOT120).toString();}catch(e){return existing||relativePath||'';}
+  }
+  function exportName120(){
+    const base=String(state?.projectName||'regie-preview')
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9_-]+/gi,'_')
+      .replace(/^_+|_+$/g,'')||'regie-preview';
+    const stamp=new Date().toISOString().slice(0,10).replace(/-/g,'');
+    return `${stamp}_${base}_diecrew_player.json`;
+  }
+  function buildPlaylist120(){
+    const items=(typeof regieVideoItems==='function')?(regieVideoItems()||[]):[];
+    const clips=items.map((item,index)=>{
+      const relativePath=relPath120(item);
+      const fileName=cleanFile120(item?.name||relativePath);
+      const type=isAudio120(item)?'audio':'video';
+      const clip={
+        index,
+        type,
+        fileName,
+        relativePath,
+        mime:mime120(item),
+        isLoop:type==='video'&&!!item.loop,
+        startMode:item?.startMode||item?.media?.startMode||'',
+        endMode:item?.endMode||item?.media?.endMode||'',
+        transitionMode:item?.transitionMode||item?.media?.transitionMode||'',
+        markColor:item?.markColor||item?.media?.markColor||'',
+        url:itemUrl120(relativePath,item),
+        cue:item?.cue||item?.firstCue||index+1,
+        firstCue:item?.firstCue||item?.cue||index+1,
+        lastCue:item?.lastCue||item?.cue||index+1,
+        start:item?.start||'',
+        title:item?.what||item?.name||fileName
+      };
+      if(item?.media?.thumb||item?.media?.thumbnail)clip.thumbnail=item.media.thumb||item.media.thumbnail;
+      return clip;
+    });
+    return {
+      app:'diecrew-player-playlist',
+      version:1,
+      current:0,
+      serverRoot:PLAYER_EXPORT_ROOT120,
+      root:PLAYER_EXPORT_ROOT120,
+      generatedAt:new Date().toISOString(),
+      source:'regieplan-preview',
+      sourceProject:state?.projectName||'Regieplan',
+      sourceVersion:state?.projectVersion||'',
+      clips
+    };
+  }
+  function downloadPlaylist120(){
+    const playlist=buildPlaylist120();
+    if(!playlist.clips.length){
+      alert('Keine Medien in der Regie-Preview gefunden.');
+      return;
+    }
+    const blob=new Blob([JSON.stringify(playlist,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=exportName120();
+    a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},250);
+    const status=document.getElementById('regiePreviewNow');
+    if(status)status.textContent=`Player-JSON exportiert: ${playlist.clips.length} Clip(s)`;
+  }
+  function installExportButton120(){
+    const controls=document.getElementById('regiePreviewControls');
+    const reload=document.getElementById('regieReloadBtn');
+    if(!controls||!reload||document.getElementById('regieExportPlayerJsonBtn120'))return;
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.id='regieExportPlayerJsonBtn120';
+    btn.className='regiePreviewControlBtn regieExportPlayerJsonBtn120';
+    btn.title='Diecrew Player JSON exportieren';
+    btn.setAttribute('aria-label','Diecrew Player JSON exportieren');
+    btn.textContent='JSON';
+    btn.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      downloadPlaylist120();
+    });
+    reload.insertAdjacentElement('afterend',btn);
+  }
+  const oldRender120=window.renderRegiePreviewList||renderRegiePreviewList;
+  window.renderRegiePreviewList=function(){
+    const out=oldRender120.apply(this,arguments);
+    setTimeout(installExportButton120,0);
+    return out;
+  };
+  try{renderRegiePreviewList=window.renderRegiePreviewList;}catch(e){}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(installExportButton120,0),{once:true});
+  else setTimeout(installExportButton120,0);
+  const obs=new MutationObserver(()=>installExportButton120());
+  if(document.body)obs.observe(document.body,{childList:true,subtree:true});
+  window.exportRegiePreviewPlayerJson=downloadPlaylist120;
+})();
+
 /* ---- script block 54: V118 stable audio preview playback ---- */
 (function(){
   function items118(){try{return (typeof regieVideoItems==='function')?(regieVideoItems()||[]):[];}catch(e){return [];}}
@@ -6915,4 +7071,37 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   };
   try{updateRegiePreviewControls=window.updateRegiePreviewControls;}catch(e){}
   setTimeout(()=>audio119(),0);
+})();
+
+/* ---- script block 57: V121 keep player JSON export button beside reload ---- */
+(function(){
+  function installExportButton121(){
+    const controls=document.getElementById('regiePreviewControls');
+    const reload=document.getElementById('regieReloadBtn');
+    if(!controls||!reload||document.getElementById('regieExportPlayerJsonBtn120'))return;
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.id='regieExportPlayerJsonBtn120';
+    btn.className='regiePreviewControlBtn regieExportPlayerJsonBtn120';
+    btn.title='Diecrew Player JSON exportieren';
+    btn.setAttribute('aria-label','Diecrew Player JSON exportieren');
+    btn.textContent='JSON';
+    btn.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      if(typeof window.exportRegiePreviewPlayerJson==='function')window.exportRegiePreviewPlayerJson();
+    });
+    reload.insertAdjacentElement('afterend',btn);
+  }
+  const oldRender121=window.renderRegiePreviewList||renderRegiePreviewList;
+  window.renderRegiePreviewList=function(){
+    const out=oldRender121.apply(this,arguments);
+    setTimeout(installExportButton121,0);
+    return out;
+  };
+  try{renderRegiePreviewList=window.renderRegiePreviewList;}catch(e){}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(installExportButton121,0),{once:true});
+  else setTimeout(installExportButton121,0);
+  const obs=new MutationObserver(()=>installExportButton121());
+  if(document.body)obs.observe(document.body,{childList:true,subtree:true});
 })();
