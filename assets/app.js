@@ -861,6 +861,200 @@ $('#regiePreviewVideo')?.addEventListener('pause',()=>renderRegiePreviewList());
   };
 })();
 
+/* ---- script block 54: V118 stable audio preview playback ---- */
+(function(){
+  function items118(){try{return (typeof regieVideoItems==='function')?(regieVideoItems()||[]):[];}catch(e){return [];}}
+  function clamp118(index,items){let idx=Number(index);if(!Number.isFinite(idx))idx=Number(window.regiePreviewIndex)||0;return Math.max(0,Math.min(Math.max(items.length-1,0),idx));}
+  function isAudio118(item){
+    const t=String(item?.type||item?.mime||item?.media?.type||item?.media?.mime||'').toLowerCase();
+    const n=String(item?.name||item?.url||item?.media?.name||item?.media?.url||item?.media?.remoteUrl||'').toLowerCase();
+    return item?.kind==='audio'||t.startsWith('audio/')||/\.(mp3|wav|wave|m4a|aac|ogg|flac)(\?|#|$)/i.test(n);
+  }
+  function source118(media){
+    if(!media)return '';
+    if(typeof mediaSourceUrl==='function'){
+      const src=mediaSourceUrl(media);
+      if(src)return src;
+    }
+    return media.remoteUrl||media.url||media.data||'';
+  }
+  async function playable118(media){
+    let src=source118(media);
+    if(src&&(!/^blob:/i.test(src)||!media?.mediaKey))return src;
+    if(media?.mediaKey&&typeof hydrateMediaSource==='function'){
+      try{const hydrated=await hydrateMediaSource(media);if(hydrated)return hydrated;}catch(e){}
+    }
+    return source118(media);
+  }
+  function previewAudio118(){
+    let audio=document.getElementById('regiePreviewAudio113');
+    if(!audio){
+      audio=document.createElement('audio');
+      audio.id='regiePreviewAudio113';
+      audio.preload='metadata';
+      audio.style.display='none';
+      document.body.appendChild(audio);
+    }
+    if(!audio.dataset.v118Bound){
+      audio.dataset.v118Bound='1';
+      audio.addEventListener('ended',e=>{
+        e.stopImmediatePropagation();
+        audio.dataset.regiePlaying='0';
+        if(typeof renderRegiePreviewList==='function')renderRegiePreviewList();
+        if(typeof updateRegiePreviewControls==='function')updateRegiePreviewControls();
+      },true);
+      ['play','pause','loadedmetadata','error'].forEach(ev=>{
+        audio.addEventListener(ev,()=>{
+          audio.dataset.regiePlaying=audio.paused?'0':'1';
+          if(typeof renderRegiePreviewList==='function')renderRegiePreviewList();
+          if(typeof updateRegiePreviewControls==='function')setTimeout(updateRegiePreviewControls,0);
+        });
+      });
+    }
+    return audio;
+  }
+  function setIndex118(idx){
+    window.regiePreviewIndex=idx;
+    try{regiePreviewIndex=idx;}catch(e){}
+  }
+  function mark118(idx){
+    const items=items118();
+    document.querySelectorAll('#regiePreviewList .regiePreviewItem').forEach((el,i)=>{
+      el.classList.toggle('active',i===idx);
+      el.classList.toggle('isPreviewSelected',i===idx);
+      el.classList.toggle('playingOutline',i===idx);
+    });
+    document.querySelectorAll('#tbody tr.regiePreviewSheetActive').forEach(tr=>tr.classList.remove('regiePreviewSheetActive'));
+    const rowId=items[idx]?.rowId;
+    if(rowId){
+      const tr=document.querySelector(`#tbody tr[data-id="${CSS.escape(rowId)}"]`);
+      if(tr){
+        tr.classList.add('regiePreviewSheetActive');
+        try{tr.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'});}catch(e){}
+      }
+    }
+  }
+  function nowText118(item,suffix=''){
+    return (item?.start?item.start+' - ':'')+(item?.name||item?.audioName||'Medium')+suffix;
+  }
+  async function playAudio118(item,src,mode){
+    const audio=previewAudio118();
+    audio.dataset.regieAudioMode=mode;
+    if(audio.getAttribute('src')!==src){
+      audio.src=src;
+      audio.load();
+    }
+    const started=audio.play();
+    if(started&&typeof started.catch==='function')started.catch(()=>{});
+    return audio;
+  }
+  window.playRegiePreview=async function(index){
+    const items=items118();
+    if(!items.length)return;
+    const idx=clamp118(index,items);
+    setIndex118(idx);
+    mark118(idx);
+    const item=items[idx];
+    const video=document.getElementById('regiePreviewVideo');
+    const now=document.getElementById('regiePreviewNow');
+    const audio=previewAudio118();
+
+    if(isAudio118(item)){
+      const src=await playable118(item.media||item);
+      if(!src){
+        if(now)now.textContent=(item?.name||'Audio')+' kann nicht abgespielt werden.';
+        if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+        return;
+      }
+      if(video&&!video.paused)video.pause();
+      item.url=src;
+      await playAudio118(item,src,'audio-only');
+      if(now)now.textContent=nowText118(item,' (Audio)');
+      if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+      if(typeof updateRegiePreviewControls==='function')setTimeout(updateRegiePreviewControls,0);
+      return;
+    }
+
+    const videoSrc=await playable118(item.media||item);
+    if(!videoSrc){
+      if(now)now.textContent=(item?.name||'Video')+' kann nicht abgespielt werden.';
+      if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+      return;
+    }
+    audio.pause();
+    audio.dataset.regieAudioMode='';
+    if(video){
+      if(video.getAttribute('src')!==videoSrc){
+        video.src=videoSrc;
+        video.load();
+      }
+      video.loop=!!item.loop;
+      video.play().catch(()=>{});
+    }
+    if(item.audioUrl){
+      await playAudio118(item,item.audioUrl,'with-video');
+    }
+    if(now)now.textContent=nowText118(item,item.audioName?' + '+item.audioName:'');
+    if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+    if(typeof updateRegiePreviewControls==='function')setTimeout(updateRegiePreviewControls,0);
+  };
+  try{playRegiePreview=window.playRegiePreview;}catch(e){}
+
+  window.toggleRegiePreview=function(index){
+    const items=items118();
+    if(!items.length)return;
+    const idx=clamp118(index,items);
+    if(idx!==Number(window.regiePreviewIndex)){window.playRegiePreview(idx);return;}
+    const item=items[idx];
+    const audio=previewAudio118();
+    if(isAudio118(item)||audio.dataset.regieAudioMode==='with-video'){
+      if(!audio.src){window.playRegiePreview(idx);return;}
+      if(audio.paused)audio.play().catch(()=>{});else audio.pause();
+    }else{
+      const video=document.getElementById('regiePreviewVideo');
+      if(!video?.src){window.playRegiePreview(idx);return;}
+      if(video.paused)video.play().catch(()=>{});else video.pause();
+    }
+    if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+    if(typeof updateRegiePreviewControls==='function')setTimeout(updateRegiePreviewControls,0);
+  };
+  try{toggleRegiePreview=window.toggleRegiePreview;}catch(e){}
+
+  window.regiePreviewStep=function(dir){
+    const items=items118();
+    if(!items.length)return;
+    const idx=clamp118((Number(window.regiePreviewIndex)||0)+Number(dir||0),items);
+    mark118(idx);
+    return window.playRegiePreview(idx);
+  };
+  try{regiePreviewStep=window.regiePreviewStep;}catch(e){}
+
+  const oldUpdate118=window.updateRegiePreviewControls;
+  window.updateRegiePreviewControls=function(){
+    if(oldUpdate118)oldUpdate118.apply(this,arguments);
+    const items=items118();
+    const idx=clamp118(window.regiePreviewIndex,items);
+    const item=items[idx];
+    const audio=previewAudio118();
+    const video=document.getElementById('regiePreviewVideo');
+    const play=document.getElementById('regiePlayPauseBtn');
+    const prev=document.getElementById('regiePrevBtn');
+    const next=document.getElementById('regieNextBtn');
+    const audioActive=isAudio118(item)||audio.dataset.regieAudioMode==='with-video';
+    const playing=audioActive?!audio.paused:(video&&!video.paused);
+    if(play){
+      play.title=playing?'Pause':'Play';
+      play.setAttribute('aria-label',playing?'Pause':'Play');
+      if(!play.querySelector('svg'))play.textContent=playing?'Pause':'Play';
+    }
+    if(prev)prev.disabled=!items.length||idx<=0;
+    if(next)next.disabled=!items.length||idx>=items.length-1;
+  };
+  try{updateRegiePreviewControls=window.updateRegiePreviewControls;}catch(e){}
+
+  setTimeout(()=>previewAudio118(),0);
+})();
+
 /* ---- script block 47: V108 final responsive layer ---- */
 (function(){
   const icons108={
@@ -6550,4 +6744,175 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>init116(document),0),{once:true});
   else setTimeout(()=>init116(document),0);
   setInterval(()=>stabilizeDuplicate116(document),250);
+})();
+
+/* ---- script block 55: V119 final audio preview wins after all wrappers ---- */
+(function(){
+  function items119(){try{return (typeof regieVideoItems==='function')?(regieVideoItems()||[]):[];}catch(e){return [];}}
+  function clamp119(index,items){let idx=Number(index);if(!Number.isFinite(idx))idx=Number(window.regiePreviewIndex)||0;return Math.max(0,Math.min(Math.max(items.length-1,0),idx));}
+  function isAudio119(item){
+    const t=String(item?.type||item?.mime||item?.media?.type||item?.media?.mime||'').toLowerCase();
+    const n=String(item?.name||item?.url||item?.media?.name||item?.media?.url||item?.media?.remoteUrl||'').toLowerCase();
+    return item?.kind==='audio'||t.startsWith('audio/')||/\.(mp3|wav|wave|m4a|aac|ogg|flac)(\?|#|$)/i.test(n);
+  }
+  function source119(media){
+    if(!media)return '';
+    if(typeof mediaSourceUrl==='function'){
+      const src=mediaSourceUrl(media);
+      if(src)return src;
+    }
+    return media.remoteUrl||media.url||media.data||'';
+  }
+  async function playable119(media){
+    let src=source119(media);
+    if(src&&(!/^blob:/i.test(src)||!media?.mediaKey))return src;
+    if(media?.mediaKey&&typeof hydrateMediaSource==='function'){
+      try{const hydrated=await hydrateMediaSource(media);if(hydrated)return hydrated;}catch(e){}
+    }
+    return source119(media);
+  }
+  function audio119(){
+    let audio=document.getElementById('regiePreviewAudio113');
+    if(!audio){
+      audio=document.createElement('audio');
+      audio.id='regiePreviewAudio113';
+      audio.preload='metadata';
+      audio.style.display='none';
+      document.body.appendChild(audio);
+    }
+    if(!audio.dataset.v119Bound){
+      audio.dataset.v119Bound='1';
+      audio.addEventListener('ended',e=>{
+        e.stopImmediatePropagation();
+        audio.dataset.regieAudioMode='';
+        if(typeof renderRegiePreviewList==='function')renderRegiePreviewList();
+        if(typeof updateRegiePreviewControls==='function')updateRegiePreviewControls();
+      },true);
+      ['play','pause','loadedmetadata','error'].forEach(ev=>audio.addEventListener(ev,()=>{
+        if(typeof renderRegiePreviewList==='function')renderRegiePreviewList();
+        if(typeof updateRegiePreviewControls==='function')setTimeout(updateRegiePreviewControls,0);
+      }));
+    }
+    return audio;
+  }
+  function setIndex119(idx){window.regiePreviewIndex=idx;try{regiePreviewIndex=idx;}catch(e){}}
+  function mark119(idx){
+    const items=items119();
+    document.querySelectorAll('#regiePreviewList .regiePreviewItem').forEach((el,i)=>{
+      el.classList.toggle('active',i===idx);
+      el.classList.toggle('isPreviewSelected',i===idx);
+      el.classList.toggle('playingOutline',i===idx);
+    });
+    document.querySelectorAll('#tbody tr.regiePreviewSheetActive').forEach(tr=>tr.classList.remove('regiePreviewSheetActive'));
+    const rowId=items[idx]?.rowId;
+    if(rowId){
+      const tr=document.querySelector(`#tbody tr[data-id="${CSS.escape(rowId)}"]`);
+      if(tr){
+        tr.classList.add('regiePreviewSheetActive');
+        try{tr.scrollIntoView({block:'center',inline:'nearest',behavior:'auto'});}catch(e){}
+      }
+    }
+  }
+  async function startAudio119(src,mode){
+    const a=audio119();
+    a.dataset.regieAudioMode=mode;
+    if(a.getAttribute('src')!==src){a.src=src;a.load();}
+    a.play().catch(()=>{});
+    return a;
+  }
+  function label119(item,suffix=''){return (item?.start?item.start+' - ':'')+(item?.name||item?.audioName||'Medium')+suffix;}
+  window.playRegiePreview=async function(index){
+    const items=items119();
+    if(!items.length)return;
+    const idx=clamp119(index,items);
+    setIndex119(idx);
+    mark119(idx);
+    const item=items[idx];
+    const video=document.getElementById('regiePreviewVideo');
+    const now=document.getElementById('regiePreviewNow');
+    const a=audio119();
+    if(isAudio119(item)){
+      const src=await playable119(item.media||item);
+      if(!src){
+        if(now)now.textContent=(item?.name||'Audio')+' kann nicht abgespielt werden.';
+        if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+        return;
+      }
+      if(video&&!video.paused)video.pause();
+      item.url=src;
+      await startAudio119(src,'audio-only');
+      if(now)now.textContent=label119(item,' (Audio)');
+      if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+      if(typeof updateRegiePreviewControls==='function')setTimeout(updateRegiePreviewControls,0);
+      return;
+    }
+    const src=await playable119(item.media||item);
+    if(!src){
+      if(now)now.textContent=(item?.name||'Video')+' kann nicht abgespielt werden.';
+      if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+      return;
+    }
+    a.pause();
+    a.dataset.regieAudioMode='';
+    if(video){
+      if(video.getAttribute('src')!==src){video.src=src;video.load();}
+      video.loop=!!item.loop;
+      video.play().catch(()=>{});
+    }
+    if(item.audioUrl)await startAudio119(item.audioUrl,'with-video');
+    if(now)now.textContent=label119(item,item.audioName?' + '+item.audioName:'');
+    if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+    if(typeof updateRegiePreviewControls==='function')setTimeout(updateRegiePreviewControls,0);
+  };
+  try{playRegiePreview=window.playRegiePreview;}catch(e){}
+  window.toggleRegiePreview=function(index){
+    const items=items119();
+    if(!items.length)return;
+    const idx=clamp119(index,items);
+    if(idx!==Number(window.regiePreviewIndex)){window.playRegiePreview(idx);return;}
+    const item=items[idx];
+    const a=audio119();
+    if(isAudio119(item)||a.dataset.regieAudioMode==='with-video'){
+      if(!a.src){window.playRegiePreview(idx);return;}
+      if(a.paused)a.play().catch(()=>{});else a.pause();
+    }else{
+      const video=document.getElementById('regiePreviewVideo');
+      if(!video?.src){window.playRegiePreview(idx);return;}
+      if(video.paused)video.play().catch(()=>{});else video.pause();
+    }
+    if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+    if(typeof updateRegiePreviewControls==='function')setTimeout(updateRegiePreviewControls,0);
+  };
+  try{toggleRegiePreview=window.toggleRegiePreview;}catch(e){}
+  window.regiePreviewStep=function(dir){
+    const items=items119();
+    if(!items.length)return;
+    const idx=clamp119((Number(window.regiePreviewIndex)||0)+Number(dir||0),items);
+    mark119(idx);
+    return window.playRegiePreview(idx);
+  };
+  try{regiePreviewStep=window.regiePreviewStep;}catch(e){}
+  const prevUpdate119=window.updateRegiePreviewControls;
+  window.updateRegiePreviewControls=function(){
+    if(prevUpdate119)prevUpdate119.apply(this,arguments);
+    const items=items119();
+    const idx=clamp119(window.regiePreviewIndex,items);
+    const item=items[idx];
+    const a=audio119();
+    const video=document.getElementById('regiePreviewVideo');
+    const play=document.getElementById('regiePlayPauseBtn');
+    const prev=document.getElementById('regiePrevBtn');
+    const next=document.getElementById('regieNextBtn');
+    const audioActive=isAudio119(item)||a.dataset.regieAudioMode==='with-video';
+    const playing=audioActive?!a.paused:(video&&!video.paused);
+    if(play){
+      play.title=playing?'Pause':'Play';
+      play.setAttribute('aria-label',playing?'Pause':'Play');
+      if(!play.querySelector('svg'))play.textContent=playing?'Pause':'Play';
+    }
+    if(prev)prev.disabled=!items.length||idx<=0;
+    if(next)next.disabled=!items.length||idx>=items.length-1;
+  };
+  try{updateRegiePreviewControls=window.updateRegiePreviewControls;}catch(e){}
+  setTimeout(()=>audio119(),0);
 })();
