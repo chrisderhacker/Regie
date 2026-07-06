@@ -5879,3 +5879,140 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{normalizeAllMedia112();try{if(typeof renderRegiePreviewList==='function')renderRegiePreviewList();}catch(e){}},100));
 })();
+
+/* ---- script block 50: V113 side toggles and audio-only preview playback ---- */
+(function(){
+  const iconLeft113='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5 8.5 12l7 7-1.8 1.8L4.9 12l8.8-8.8L15.5 5Z"/></svg>';
+  const iconRight113='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8.5 5 7 7-7 7 1.8 1.8 8.8-8.8-8.8-8.8L8.5 5Z"/></svg>';
+  function addPanelToggle113(id,side,label,html){
+    if(document.getElementById(id))return;
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.id=id;
+    btn.className='panelToggle113';
+    btn.innerHTML=html;
+    btn.title=label;
+    btn.setAttribute('aria-label',label);
+    btn.addEventListener('click',()=>{
+      const cls=side+'Collapsed';
+      document.body.classList.toggle(cls);
+      try{localStorage.setItem('regie_'+cls,document.body.classList.contains(cls)?'1':'0');}catch(e){}
+    });
+    document.body.appendChild(btn);
+  }
+  function initPanelToggles113(){
+    try{
+      if(localStorage.getItem('regie_leftCollapsed')==='1')document.body.classList.add('leftCollapsed');
+      if(localStorage.getItem('regie_rightCollapsed')==='1')document.body.classList.add('rightCollapsed');
+    }catch(e){}
+    addPanelToggle113('leftPanelToggle113','left','Linken Bereich ein-/ausklappen',iconLeft113);
+    addPanelToggle113('rightPanelToggle113','right','Rechten Bereich ein-/ausklappen',iconRight113);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initPanelToggles113,{once:true});
+  else setTimeout(initPanelToggles113,0);
+
+  function previewAudio113(){
+    let audio=document.getElementById('regiePreviewAudio113');
+    if(!audio){
+      audio=document.createElement('audio');
+      audio.id='regiePreviewAudio113';
+      audio.preload='metadata';
+      audio.style.display='none';
+      document.body.appendChild(audio);
+      audio.addEventListener('ended',()=>{
+        const items=(typeof regieVideoItems==='function')?regieVideoItems():[];
+        const idx=Number(window.regiePreviewIndex)||0;
+        if(idx<items.length-1)window.playRegiePreview(idx+1);
+        else if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+      });
+      audio.addEventListener('play',()=>{if(typeof renderRegiePreviewList==='function')renderRegiePreviewList();});
+      audio.addEventListener('pause',()=>{if(typeof renderRegiePreviewList==='function')renderRegiePreviewList();});
+    }
+    return audio;
+  }
+  function isAudioItem113(item){
+    const t=String(item?.type||item?.mime||item?.media?.type||item?.media?.mime||'').toLowerCase();
+    const n=String(item?.name||item?.url||item?.media?.name||item?.media?.url||item?.media?.remoteUrl||'').toLowerCase();
+    return item?.kind==='audio'||t.startsWith('audio/')||/\.(mp3|wav|wave|m4a|aac|ogg|flac)(\?|#|$)/i.test(n);
+  }
+  function source113(item){
+    const m=item?.media||item;
+    if(typeof mediaSourceUrl==='function'){
+      const src=mediaSourceUrl(m);
+      if(src)return src;
+    }
+    return m?.remoteUrl||m?.url||m?.data||item?.url||'';
+  }
+  async function playable113(item){
+    let src=source113(item);
+    const m=item?.media||item;
+    if(src&&(!/^blob:/i.test(src)||!m?.mediaKey))return src;
+    if(m?.mediaKey&&typeof hydrateMediaSource==='function'){
+      try{return await hydrateMediaSource(m);}catch(e){}
+    }
+    return source113(item);
+  }
+  function setPreviewIndex113(idx){
+    window.regiePreviewIndex=idx;
+    try{regiePreviewIndex=idx;}catch(e){}
+  }
+  window.playRegiePreview=async function(index){
+    const items=(typeof regieVideoItems==='function')?regieVideoItems():[];
+    const video=document.getElementById('regiePreviewVideo');
+    const now=document.getElementById('regiePreviewNow');
+    if(!items.length)return;
+    let idx=Number(index);
+    if(!Number.isFinite(idx))idx=Number(window.regiePreviewIndex)||0;
+    idx=Math.max(0,Math.min(items.length-1,idx));
+    setPreviewIndex113(idx);
+    const item=items[idx];
+    const src=await playable113(item);
+    if(!src){
+      if(now)now.textContent=(item?.name||'Datei')+' kann nicht abgespielt werden. Datei bitte neu verknuepfen.';
+      if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+      return;
+    }
+    if(isAudioItem113(item)){
+      const audio=previewAudio113();
+      if(audio.getAttribute('src')!==src)audio.src=src;
+      audio.play().catch(()=>{});
+      if(now)now.textContent=(item.start?item.start+' - ':'')+(item.name||'Audio')+' (Audio)';
+      if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+      if(typeof updateRegiePreviewControls==='function')setTimeout(updateRegiePreviewControls,0);
+      return;
+    }
+    const audio=previewAudio113();
+    audio.pause();
+    if(video){
+      if(video.getAttribute('src')!==src)video.src=src;
+      video.loop=!!item.loop;
+      video.play().catch(()=>{});
+    }
+    if(now)now.textContent=(item.start?item.start+' - ':'')+(item.name||'Video');
+    if(typeof renderRegiePreviewList==='function')renderRegiePreviewList(items);
+    if(typeof updateRegiePreviewControls==='function')setTimeout(updateRegiePreviewControls,0);
+  };
+  try{playRegiePreview=window.playRegiePreview;}catch(e){}
+  window.toggleRegiePreview=function(index){
+    const items=(typeof regieVideoItems==='function')?regieVideoItems():[];
+    let idx=Number(index);
+    if(!Number.isFinite(idx))idx=Number(window.regiePreviewIndex)||0;
+    const item=items[idx];
+    if(!item)return;
+    if(idx!==Number(window.regiePreviewIndex)){window.playRegiePreview(idx);return;}
+    if(isAudioItem113(item)){
+      const audio=previewAudio113();
+      if(!audio.src){window.playRegiePreview(idx);return;}
+      if(audio.paused)audio.play().catch(()=>{});else audio.pause();
+    }else{
+      const audio=previewAudio113();
+      audio.pause();
+      const video=document.getElementById('regiePreviewVideo');
+      if(!video?.src){window.playRegiePreview(idx);return;}
+      if(video.paused)video.play().catch(()=>{});else video.pause();
+    }
+    if(typeof renderRegiePreviewList==='function')renderRegiePreviewList();
+    if(typeof updateRegiePreviewControls==='function')setTimeout(updateRegiePreviewControls,0);
+  };
+  try{toggleRegiePreview=window.toggleRegiePreview;}catch(e){}
+})();

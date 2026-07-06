@@ -1581,3 +1581,66 @@ tbody .col-screen .mediaTools{
     box-shadow:inset 0 0 0 2px rgba(201,255,25,.55),0 0 18px rgba(201,255,25,.18)!important;
   }
 }
+
+/* ---- V113 collapsible side panels ---- */
+@media screen{
+  .app{
+    --left-panel:180px;
+    --right-panel:300px;
+    grid-template-columns:var(--left-panel) minmax(0,1fr) var(--right-panel)!important;
+    transition:grid-template-columns .18s ease;
+  }
+  body.leftCollapsed .app{--left-panel:0px}
+  body.rightCollapsed .app{--right-panel:0px}
+  body.leftCollapsed .side,
+  body.rightCollapsed .right{
+    opacity:0;
+    pointer-events:none;
+    border-width:0!important;
+    overflow:hidden!important;
+  }
+  .side,.right{transition:opacity .16s ease}
+  .panelToggle113{
+    position:fixed;
+    z-index:80;
+    top:50%;
+    width:28px;
+    height:72px;
+    transform:translateY(-50%);
+    border:1px solid rgba(201,255,25,.45);
+    background:rgba(9,14,10,.86);
+    color:var(--lime);
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    padding:0;
+    box-shadow:0 10px 34px rgba(0,0,0,.28);
+  }
+  .panelToggle113:hover{
+    background:rgba(201,255,25,.16);
+    border-color:var(--lime);
+    color:#fff;
+  }
+  .panelToggle113 svg{
+    width:16px;
+    height:16px;
+    fill:currentColor;
+    pointer-events:none;
+  }
+  #leftPanelToggle113{left:6px}
+  #rightPanelToggle113{right:6px}
+  body:not(.leftCollapsed) #leftPanelToggle113{left:174px}
+  body:not(.rightCollapsed) #rightPanelToggle113{right:294px}
+  body.leftCollapsed #leftPanelToggle113 svg{transform:rotate(180deg)}
+  body.rightCollapsed #rightPanelToggle113 svg{transform:rotate(180deg)}
+}
+
+@media screen and (max-width:1400px){
+  .app{--left-panel:160px;--right-panel:280px}
+  body:not(.leftCollapsed) #leftPanelToggle113{left:154px}
+  body:not(.rightCollapsed) #rightPanelToggle113{right:274px}
+}
+
+@media screen and (max-width:1180px){
+  .panelToggle113{display:none!important}
+}
