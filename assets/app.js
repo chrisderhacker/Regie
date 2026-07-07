@@ -7106,6 +7106,248 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.body)obs.observe(document.body,{childList:true,subtree:true});
 })();
 
+/* ---- script block 59: V124 final fit fills available table width ---- */
+(function(){
+  function minWidth124(c){
+    if(!c)return 100;
+    if(c.id==='handle')return 42;
+    if(c.id==='cue')return 46;
+    if(c.id==='color')return 76;
+    if(['start','duration','end'].includes(c.id))return 82;
+    if(c.id==='what')return 150;
+    if(c.id==='detail')return 190;
+    if(c.id==='sound')return 170;
+    if(c.type==='screen')return 420;
+    return 110;
+  }
+  function fillWeight124(c){
+    if(!c)return 1;
+    if(c.type==='screen')return 6;
+    if(c.id==='detail')return 3;
+    if(c.id==='what')return 2.5;
+    if(c.id==='sound')return 2;
+    if(['light','camera','people','mic'].includes(c.id))return 1.4;
+    if(['handle','cue','color','start','duration','end'].includes(c.id))return .15;
+    return 1;
+  }
+  window.fitToScreen=function(){
+    const wrap=document.getElementById('tableWrap');
+    if(!wrap)return;
+    const visible=(()=>{try{return cols();}catch(e){return [];}})();
+    if(!visible.length)return;
+    const actionWidth=82;
+    const available=Math.max(360,wrap.clientWidth-10);
+    state.colWidths=state.colWidths||{};
+    const colsNow=visible.map(c=>{
+      const current=Math.max(minWidth124(c),Number(state.colWidths[c.id]||defaultColumnWidth(c)||minWidth124(c)));
+      return {c,w:current,weight:fillWeight124(c)};
+    });
+    const natural=colsNow.reduce((sum,x)=>sum+x.w,0)+actionWidth;
+    if(natural<available){
+      const extra=available-natural;
+      const totalWeight=colsNow.reduce((sum,x)=>sum+x.weight,0)||1;
+      colsNow.forEach(x=>state.colWidths[x.c.id]=Math.round(x.w+(extra*x.weight/totalWeight)));
+      state.zoom=1;
+    }else{
+      colsNow.forEach(x=>state.colWidths[x.c.id]=Math.round(x.w));
+      state.zoom=Math.max(.58,Math.min(1.15,+(available/natural).toFixed(3)));
+    }
+    saveLocal(false);
+    render();
+    wrap.classList.add('fitMode');
+    setTimeout(()=>{
+      try{
+        const table=wrap.querySelector('table');
+        const width=table?.getBoundingClientRect().width||0;
+        const target=wrap.clientWidth-10;
+        if(width>0&&Math.abs(width-target)>24){
+          const factor=target/width;
+          state.zoom=Math.max(.58,Math.min(1.25,+((state.zoom||1)*factor).toFixed(3)));
+          render();
+          wrap.classList.add('fitMode');
+        }
+        wrap.scrollLeft=0;
+      }catch(e){}
+    },80);
+  };
+  try{fitToScreen=window.fitToScreen;}catch(e){}
+})();
+
+/* ---- script block 58: V123 monitor fit and robust default project load ---- */
+(function(){
+  const BUILD_VERSION123='20260707-v123';
+  function visibleCols123(){try{return cols();}catch(e){return [];}}
+  function baseWidth123(c){
+    if(!c)return 120;
+    if(c.id==='handle')return 42;
+    if(c.id==='cue')return 46;
+    if(c.id==='color')return 78;
+    if(['start','duration','end'].includes(c.id))return 88;
+    if(c.id==='what')return 160;
+    if(c.id==='detail')return 220;
+    if(c.id==='people')return 150;
+    if(c.id==='mic')return 110;
+    if(c.id==='light')return 150;
+    if(c.id==='sound')return 180;
+    if(c.id==='camera')return 135;
+    if(c.type==='screen')return 560;
+    return 120;
+  }
+  function weight123(c){
+    if(!c)return 1;
+    if(c.type==='screen')return 5;
+    if(['detail','what'].includes(c.id))return 2.5;
+    if(['sound','light','camera','people'].includes(c.id))return 1.5;
+    if(['handle','cue','color','start','duration','end'].includes(c.id))return .25;
+    return 1;
+  }
+  window.fitToScreen=function(){
+    const wrap=document.getElementById('tableWrap');
+    if(!wrap)return;
+    const visible=visibleCols123();
+    if(!visible.length)return;
+    const actionWidth=82;
+    const available=Math.max(360,wrap.clientWidth-10);
+    const bases=visible.map(c=>({c,w:baseWidth123(c),weight:weight123(c)}));
+    const baseTotal=bases.reduce((sum,x)=>sum+x.w,0)+actionWidth;
+    state.colWidths=state.colWidths||{};
+    if(baseTotal<=available){
+      const extra=available-baseTotal;
+      const totalWeight=bases.reduce((sum,x)=>sum+x.weight,0)||1;
+      bases.forEach(x=>{
+        state.colWidths[x.c.id]=Math.max(40,Math.round(x.w+(extra*x.weight/totalWeight)));
+      });
+      state.zoom=1;
+    }else{
+      bases.forEach(x=>state.colWidths[x.c.id]=Math.max(40,Math.round(x.w)));
+      state.zoom=Math.max(.58,Math.min(1,+(available/baseTotal).toFixed(3)));
+    }
+    saveLocal(false);
+    render();
+    wrap.classList.add('fitMode');
+    setTimeout(()=>{try{wrap.scrollLeft=0;}catch(e){}},0);
+  };
+  try{fitToScreen=window.fitToScreen;}catch(e){}
+
+  function defaultCandidates123(){
+    const file=(typeof DEFAULT_PROJECT_FILE!=='undefined'?DEFAULT_PROJECT_FILE:'20260617v1_LV_Regieplan_GREEN_FUTURE.json');
+    const path=location.pathname.replace(/[^/]*$/,'');
+    return Array.from(new Set([
+      file,
+      './'+file,
+      path+file,
+      '/'+file
+    ].map(x=>String(x||'').replace(/\/{2,}/g,'/'))));
+  }
+  async function fetchProject123(path){
+    const sep=path.includes('?')?'&':'?';
+    const res=await fetch(path+sep+'build='+encodeURIComponent(BUILD_VERSION123)+'&t='+Date.now(),{cache:'no-store'});
+    if(!res.ok)throw new Error(path+' HTTP '+res.status);
+    return res.json();
+  }
+  function hasProject123(){
+    return Array.isArray(state?.rows)&&state.rows.length>20&&String(state?.projectName||'').trim();
+  }
+  async function loadDefault123(force=true){
+    if(!force&&hasProject123())return;
+    if(new URLSearchParams(location.search).get('local')==='1')return;
+    const errors=[];
+    for(const path of defaultCandidates123()){
+      try{
+        const data=await fetchProject123(path);
+        state=data.state||data;
+        if(!state.rows?.length)throw new Error(path+' enthielt keine rows');
+        parseVersionMeta();
+        applyCleanColorDefaults();
+        render();
+        setServerStatus('Standard-Projekt geladen: '+path+' ('+(state.rows?.length||0)+' Zeilen)');
+        return;
+      }catch(err){
+        errors.push(err.message);
+      }
+    }
+    setServerStatus('Standard-Projekt nicht geladen: '+errors.join(' | '));
+    console.warn('Default-Regieplan nicht geladen',errors);
+  }
+  const oldDefault123=window.loadDefaultProjectFromServer||loadDefaultProjectFromServer;
+  window.loadDefaultProjectFromServer=function(force=true){
+    return loadDefault123(force).catch(err=>{
+      console.warn(err);
+      if(oldDefault123)return oldDefault123(force);
+    });
+  };
+  try{loadDefaultProjectFromServer=window.loadDefaultProjectFromServer;}catch(e){}
+  setTimeout(()=>{if(!hasProject123())loadDefault123(true);},400);
+  setTimeout(()=>{if(!hasProject123())loadDefault123(true);},1600);
+})();
+
+/* ---- script block 60: V125 final fit override after default loader ---- */
+(function(){
+  function minWidth125(c){
+    if(!c)return 100;
+    if(c.id==='handle')return 42;
+    if(c.id==='cue')return 46;
+    if(c.id==='color')return 76;
+    if(['start','duration','end'].includes(c.id))return 82;
+    if(c.id==='what')return 150;
+    if(c.id==='detail')return 190;
+    if(c.id==='sound')return 170;
+    if(c.type==='screen')return 420;
+    return 110;
+  }
+  function fillWeight125(c){
+    if(!c)return 1;
+    if(c.type==='screen')return 6;
+    if(c.id==='detail')return 3;
+    if(c.id==='what')return 2.5;
+    if(c.id==='sound')return 2;
+    if(['light','camera','people','mic'].includes(c.id))return 1.4;
+    if(['handle','cue','color','start','duration','end'].includes(c.id))return .15;
+    return 1;
+  }
+  window.fitToScreen=function(){
+    const wrap=document.getElementById('tableWrap');
+    if(!wrap)return;
+    const visible=(()=>{try{return cols();}catch(e){return [];}})();
+    if(!visible.length)return;
+    const actionWidth=82;
+    const available=Math.max(360,wrap.clientWidth-10);
+    state.colWidths=state.colWidths||{};
+    const colsNow=visible.map(c=>{
+      const current=Math.max(minWidth125(c),Number(state.colWidths[c.id]||defaultColumnWidth(c)||minWidth125(c)));
+      return {c,w:current,weight:fillWeight125(c)};
+    });
+    const natural=colsNow.reduce((sum,x)=>sum+x.w,0)+actionWidth;
+    if(natural<available){
+      const extra=available-natural;
+      const totalWeight=colsNow.reduce((sum,x)=>sum+x.weight,0)||1;
+      colsNow.forEach(x=>state.colWidths[x.c.id]=Math.round(x.w+(extra*x.weight/totalWeight)));
+      state.zoom=1;
+    }else{
+      colsNow.forEach(x=>state.colWidths[x.c.id]=Math.round(x.w));
+      state.zoom=Math.max(.58,Math.min(1.15,+(available/natural).toFixed(3)));
+    }
+    saveLocal(false);
+    render();
+    wrap.classList.add('fitMode');
+    setTimeout(()=>{
+      try{
+        const table=wrap.querySelector('table');
+        const width=table?.getBoundingClientRect().width||0;
+        const target=wrap.clientWidth-10;
+        if(width>0&&Math.abs(width-target)>24){
+          const factor=target/width;
+          state.zoom=Math.max(.58,Math.min(1.25,+((state.zoom||1)*factor).toFixed(3)));
+          render();
+          wrap.classList.add('fitMode');
+        }
+        wrap.scrollLeft=0;
+      }catch(e){}
+    },80);
+  };
+  try{fitToScreen=window.fitToScreen;}catch(e){}
+})();
+
 /* ---- script block 58: V122 readable fit and mobile typography floor ---- */
 (function(){
   const style=document.createElement('style');
