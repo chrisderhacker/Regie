@@ -7106,6 +7106,59 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.body)obs.observe(document.body,{childList:true,subtree:true});
 })();
 
+/* ---- script block 61: V126 force server default once on startup ---- */
+(function(){
+  const DEFAULT_FORCE_VERSION126='20260707-v126';
+  const DEFAULT_FORCE_FILE126='20260617v1_LV_Regieplan_GREEN_FUTURE.json';
+  let done126=false;
+  function candidates126(){
+    const path=location.pathname.replace(/[^/]*$/,'');
+    return Array.from(new Set([
+      DEFAULT_FORCE_FILE126,
+      './'+DEFAULT_FORCE_FILE126,
+      path+DEFAULT_FORCE_FILE126,
+      '/'+DEFAULT_FORCE_FILE126
+    ].map(x=>String(x).replace(/\/{2,}/g,'/'))));
+  }
+  async function fetch126(path){
+    const sep=path.includes('?')?'&':'?';
+    const res=await fetch(path+sep+'forceDefault='+encodeURIComponent(DEFAULT_FORCE_VERSION126)+'&t='+Date.now(),{cache:'no-store'});
+    if(!res.ok)throw new Error(path+' HTTP '+res.status);
+    return res.json();
+  }
+  async function forceDefault126(){
+    if(done126)return;
+    if(new URLSearchParams(location.search).get('local')==='1')return;
+    const errors=[];
+    for(const path of candidates126()){
+      try{
+        const data=await fetch126(path);
+        const next=data.state||data;
+        if(!Array.isArray(next.rows)||next.rows.length<20)throw new Error(path+' hat keine gueltigen rows');
+        done126=true;
+        state=next;
+        parseVersionMeta();
+        applyCleanColorDefaults();
+        render();
+        if(typeof renderRegiePreviewList==='function')setTimeout(()=>renderRegiePreviewList(),0);
+        setServerStatus('Server-Default geladen: '+path+' ('+state.rows.length+' Zeilen)');
+        return;
+      }catch(err){
+        errors.push(err.message);
+      }
+    }
+    setServerStatus('Server-Default NICHT geladen: '+errors.join(' | '));
+    console.warn('Server-Default nicht geladen',errors);
+  }
+  window.forceServerDefaultRegieplan=forceDefault126;
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',()=>setTimeout(forceDefault126,80),{once:true});
+  }else{
+    setTimeout(forceDefault126,80);
+  }
+  setTimeout(forceDefault126,900);
+})();
+
 /* ---- script block 59: V124 final fit fills available table width ---- */
 (function(){
   function minWidth124(c){

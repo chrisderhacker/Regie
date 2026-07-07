@@ -2048,4 +2048,38 @@ tbody .col-screen .mediaTools{
     pointer-events:none;
     user-select:none;
   }
+  .audioTonCol .audioTonDrop:not(.hasMedia){
+    display:grid!important;
+    grid-template-rows:minmax(22px,1fr) auto!important;
+    align-content:center!important;
+    align-items:center!important;
+    gap:8px!important;
+    padding:10px 12px!important;
+    min-height:72px!important;
+    height:calc(var(--row-h,110px) - 14px)!important;
+    max-height:none!important;
+    overflow:hidden!important;
+  }
+  .audioTonCol .audioTonDrop:not(.hasMedia) .mediaText{
+    display:block!important;
+    width:100%!important;
+    min-height:22px!important;
+    max-height:none!important;
+    line-height:1.22!important;
+    white-space:normal!important;
+    overflow:hidden!important;
+    text-overflow:clip!important;
+    align-self:end!important;
+  }
+  .audioTonCol .audioTonDrop:not(.hasMedia) .mediaAdd{
+    justify-self:start!important;
+    align-self:start!important;
+    margin:0!important;
+    max-width:100%!important;
+  }
+  .audioTonCol .audioTonDrop.hasMedia{
+    min-height:78px!important;
+    height:calc(var(--row-h,110px) - 14px)!important;
+    max-height:none!important;
+  }
 }
