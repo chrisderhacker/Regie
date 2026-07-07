@@ -615,7 +615,7 @@ function fitToScreen(){
   const next=visible.map(c=>({c,w:compactWidth(c)}));
   const tableWidth=next.reduce((sum,x)=>sum+x.w,0)+actionWidth;
   const target=Math.max(260,wrap.clientWidth-8);
-  state.zoom=Math.max(.35,Math.min(1,+(target/tableWidth).toFixed(3)));
+  state.zoom=Math.max(.78,Math.min(1,+(target/tableWidth).toFixed(3)));
   state.colWidths=state.colWidths||{};
   next.forEach(x=>state.colWidths[x.c.id]=Math.round(x.w));
   saveLocal(false);
@@ -649,7 +649,7 @@ function renderRegiePreviewList(existing=null){
 $$('[data-action="add-row"]').forEach(b=>b.addEventListener('click',()=>addRow(false)));$$('[data-action="add-block"]').forEach(b=>b.addEventListener('click',()=>addRow(true)));$$('[data-action="recalc"]').forEach(b=>b.addEventListener('click',()=>recalc(0,true)));
 $$('[data-tab]').forEach(b=>b.addEventListener('click',()=>{$$('[data-tab]').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.section').forEach(s=>s.classList.remove('active'));$('#sec-'+b.dataset.tab).classList.add('active')}));$$('[data-jump]').forEach(b=>b.addEventListener('click',()=>document.querySelector(`[data-tab="${b.dataset.jump}"]`).click()));
 $('#projectName').addEventListener('input',e=>{state.projectName=e.target.value;$('#headline').textContent=state.projectName;saveLocal()});$('#projectVersion').addEventListener('focus',syncVersionField);$('#themeBtn').addEventListener('click',()=>{state.theme=state.theme==='light'?'dark':'light';render()});$('#search').addEventListener('input',renderTable);
-$('#zoomIn').addEventListener('click',()=>{$('#tableWrap')?.classList.remove('fitMode');state.zoom=Math.min(2.0,+(state.zoom+.1).toFixed(2));render()});$('#zoomOut').addEventListener('click',()=>{$('#tableWrap')?.classList.remove('fitMode');state.zoom=Math.max(.25,+(state.zoom-.1).toFixed(2));render()});$('#zoomFit').addEventListener('click',()=>{fitToScreen()});
+$('#zoomIn').addEventListener('click',()=>{$('#tableWrap')?.classList.remove('fitMode');state.zoom=Math.min(2.0,+(state.zoom+.1).toFixed(2));render()});$('#zoomOut').addEventListener('click',()=>{$('#tableWrap')?.classList.remove('fitMode');state.zoom=Math.max(.6,+(state.zoom-.1).toFixed(2));render()});$('#zoomFit').addEventListener('click',()=>{fitToScreen()});
 $('#saveScreen').addEventListener('click',()=>{let name=$('#screenName').value.trim()||'Screen '+(state.screens.length+1),res=$('#screenRes').value.trim()||'1920x1080',id='screen_'+uid();state.screens.push({id,name,res});ensureColumnOrder();state.columnOrder.push('screen:'+id);state.rows.forEach(r=>{if(!r.screens)r.screens={};r.screens[id]={text:'',media:null}});$('#screenName').value='';$('#screenRes').value='';render()});
 $('#saveColumn').addEventListener('click',()=>{let name=$('#columnName').value.trim();if(!name)return;let id='col_'+uid();state.cols.push({id,name,show:true,type:'text'});ensureColumnOrder();state.columnOrder.push(id);state.rows.forEach(r=>r[id]='');$('#columnName').value='';render()});
 $('#savePreset').addEventListener('click',()=>{let name=$('#presetName').value.trim()||'Preset',dark=$('#presetDark').value,light=$('#presetLight').value,id='pre_'+uid();state.presets.push({id,name,dark,light});selectedPresetId=id;$('#presetName').value='';render()});
@@ -3049,10 +3049,10 @@ loadLocal();parseVersionMeta();applyCleanColorDefaults();render();loadServerVers
       --ablauf-body-font:13px;
     }
     .blockInput{
-      font-size:calc(var(--ablauf-head-font) * var(--zoom))!important;
+      font-size:max(14px, calc(var(--ablauf-head-font) * var(--zoom)))!important;
     }
     .blockBar .colorPill{
-      font-size:calc((var(--ablauf-head-font) - 3px) * var(--zoom))!important;
+      font-size:max(11px, calc((var(--ablauf-head-font) - 3px) * var(--zoom)))!important;
     }
     tbody .cellText,
     tbody .cellInput,
@@ -3062,7 +3062,7 @@ loadLocal();parseVersionMeta();applyCleanColorDefaults();render();loadServerVers
     tbody .mediaTitle,
     tbody .mediaName,
     tbody .cueCell{
-      font-size:calc(var(--ablauf-body-font) * var(--zoom))!important;
+      font-size:max(12px, calc(var(--ablauf-body-font) * var(--zoom)))!important;
     }
     .fontSizePanel .fontSizeRow{
       display:grid;
@@ -3521,15 +3521,15 @@ loadLocal();parseVersionMeta();applyCleanColorDefaults();render();loadServerVers
     tbody .grip,
     tbody .rowActionsCell,
     tbody .rowActionBtn{
-      font-size:calc(var(--ablauf-head-font) * var(--zoom))!important;
+      font-size:max(12px, calc(var(--ablauf-head-font) * var(--zoom)))!important;
     }
     thead th,
     thead .colBox{
-      font-size:calc((var(--ablauf-head-font) - 2px) * var(--zoom))!important;
+      font-size:max(11px, calc((var(--ablauf-head-font) - 2px) * var(--zoom)))!important;
     }
     tbody .colorPill,
     tbody .showStartBtn{
-      font-size:calc((var(--ablauf-head-font) - 3px) * var(--zoom))!important;
+      font-size:max(11px, calc((var(--ablauf-head-font) - 3px) * var(--zoom)))!important;
     }
     tbody .cellText,
     tbody .mediaText,
@@ -3537,7 +3537,7 @@ loadLocal();parseVersionMeta();applyCleanColorDefaults();render();loadServerVers
     tbody .personToken,
     tbody .mediaTitle,
     tbody .mediaName{
-      font-size:calc(var(--ablauf-body-font) * var(--zoom))!important;
+      font-size:max(12px, calc(var(--ablauf-body-font) * var(--zoom)))!important;
     }
   `;
   document.head.appendChild(style);
@@ -7104,4 +7104,62 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   else setTimeout(installExportButton121,0);
   const obs=new MutationObserver(()=>installExportButton121());
   if(document.body)obs.observe(document.body,{childList:true,subtree:true});
+})();
+
+/* ---- script block 58: V122 readable fit and mobile typography floor ---- */
+(function(){
+  const style=document.createElement('style');
+  style.textContent=`
+    @media screen{
+      table{
+        font-size:max(12px, calc(13px * var(--zoom)))!important;
+      }
+      thead th,
+      thead .colBox,
+      #tbody .colorPill,
+      #tbody .cueCell,
+      #tbody .cellInput,
+      #tbody .showStartBtn,
+      #tbody .handleCell,
+      #tbody .grip,
+      #tbody .rowActionsCell,
+      #tbody .rowActionBtn{
+        font-size:max(11px, calc(13px * var(--zoom)))!important;
+      }
+      #tbody .cellText,
+      #tbody .mediaText,
+      #tbody .peopleCell,
+      #tbody .personToken,
+      #tbody .mediaTitle,
+      #tbody .mediaName{
+        font-size:max(12px, calc(var(--ablauf-body-font) * var(--zoom)))!important;
+      }
+      #tbody tr.blockSeparator .blockInput,
+      #tbody .blockInput{
+        font-size:max(14px, calc(var(--ablauf-head-font) * var(--zoom)))!important;
+      }
+      body.mobileMode114 table,
+      body.mobileMode114 thead th,
+      body.mobileMode114 thead .colBox,
+      body.mobileMode114 #tbody .colorPill,
+      body.mobileMode114 #tbody .cueCell,
+      body.mobileMode114 #tbody .cellInput,
+      body.mobileMode114 #tbody .showStartBtn{
+        font-size:max(11px, calc(13px * var(--zoom)))!important;
+      }
+      body.mobileMode114 #tbody .cellText,
+      body.mobileMode114 #tbody .mediaText,
+      body.mobileMode114 #tbody .peopleCell,
+      body.mobileMode114 #tbody .personToken,
+      body.mobileMode114 #tbody .mediaTitle,
+      body.mobileMode114 #tbody .mediaName{
+        font-size:max(12px, calc(var(--ablauf-body-font) * var(--zoom)))!important;
+      }
+      body.mobileMode114 #tbody tr.blockSeparator .blockInput,
+      body.mobileMode114 #tbody .blockInput{
+        font-size:max(14px, calc(var(--ablauf-head-font) * var(--zoom)))!important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 })();
